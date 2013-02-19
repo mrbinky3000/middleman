@@ -9,7 +9,7 @@ module Middleman
 
         # Once registerd
         def registered(app, options={})
-          app.set :locales_dir, "locales"
+          app.config.define_setting :locales_dir, "locales", 'The directory holding your locale configurations'
 
           # Needed for helpers as well
           app.after_configuration do
@@ -28,7 +28,7 @@ module Middleman
           @app = app
           @locales_glob = File.join(app.locales_dir, "**", "*.{rb,yml,yaml}")
 
-          # File.fnmatch doesn't support brackets: {rb,yml}
+          # File.fnmatch doesn't support brackets: {rb,yml,yaml}
           regex = @locales_glob.sub(/\./, '\.').sub(File.join("**", "*"), ".*").sub(/\//, '\/').sub("{rb,yml,yaml}", "rb|ya?ml")
           @locales_regex = %r{^#{regex}}
 

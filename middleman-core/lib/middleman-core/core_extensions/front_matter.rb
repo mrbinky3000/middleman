@@ -1,3 +1,4 @@
+require "active_support/core_ext/hash/keys"
 require 'pathname'
 
 # Extensions namespace
@@ -36,11 +37,11 @@ module Middleman::CoreExtensions
             fmdata = frontmatter_manager.data(path).first || {}
 
             data = {}
-            %w(layout layout_engine).each do |opt|
-              data[opt.to_sym] = fmdata[opt] unless fmdata[opt].nil?
+            [:layout, :layout_engine].each do |opt|
+              data[opt] = fmdata[opt] unless fmdata[opt].nil?
             end
 
-            { :options => data, :page => fmdata }
+            { :options => data, :page => ::Middleman::Util.recursively_enhance(fmdata).freeze }
           end
         end
       end
@@ -64,7 +65,7 @@ module Middleman::CoreExtensions
       def clear_data(file)
         # Copied from Sitemap::Store#file_to_path, but without
         # removing the file extension
-        file = File.expand_path(file, @app.root)
+        file = File.join(@app.root, file)
         prefix = @app.source_dir.sub(/\/$/, "") + "/"
         return unless file.include?(prefix)
         path = file.sub(prefix, "")
@@ -88,7 +89,7 @@ module Middleman::CoreExtensions
           content = content.sub(yaml_regex, "")
 
           begin
-            data = YAML.load($1)
+            data = YAML.load($1).symbolize_keys
           rescue *YAML_ERRORS => e
             logger.error "YAML Exception: #{e.message}"
             return false
@@ -111,7 +112,7 @@ module Middleman::CoreExtensions
 
           begin
             json = ($1+$2).sub(";;;", "{").sub(";;;", "}")
-            data = ActiveSupport::JSON.decode(json)
+            data = ActiveSupport::JSON.decode(json).symbolize_keys
           rescue => e
             logger.error "JSON Exception: #{e.message}"
             return false
@@ -159,7 +160,7 @@ module Middleman::CoreExtensions
           end
         end
 
-        [::Middleman::Util.recursively_enhance(data).freeze, content]
+        [data, content]
       end
 
       def normalize_path(path)
@@ -199,10 +200,13 @@ module Middleman::CoreExtensions
 
       # This page's frontmatter
       # @return [Hash]
-      def data
+      def raw_data
         app.frontmatter_manager.data(source_file).first
       end
 
+      def data
+        ::Middleman::Util.recursively_enhance(raw_data).freeze
+      end
     end
 
     module InstanceMethods

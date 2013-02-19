@@ -13,7 +13,7 @@ module Middleman
           require "yaml"
           require "active_support/json"
 
-          app.set :data_dir, "data"
+          app.config.define_setting :data_dir, "data", "The directory data files are stored in"
           app.send :include, InstanceMethods
         end
         alias :included :registered
@@ -25,11 +25,11 @@ module Middleman
         # parsing config.rb
         def initialize
           self.files.changed DataStore.matcher do |file|
-            self.data.touch_file(file) if file.start_with?("#{self.data_dir}/")
+            self.data.touch_file(file) if file.start_with?("#{config[:data_dir]}/")
           end
 
           self.files.deleted DataStore.matcher do |file|
-            self.data.remove_file(file) if file.start_with?("#{self.data_dir}/")
+            self.data.remove_file(file) if file.start_with?("#{config[:data_dir]}/")
           end
 
           super

@@ -22,7 +22,7 @@ module Middleman
 
           app.helpers Helpers
 
-          app.set :relative_links, false
+          app.config.define_setting :relative_links, false, 'Whether to generate relative links instead of absolute ones'
         end
         alias :included :registered
       end
@@ -126,7 +126,7 @@ module Middleman
           # set :relative_links, true
           # but still override on a case by case basis with the :relative parameter.
           effective_relative = relative || false
-          effective_relative = true if relative.nil? && relative_links
+          effective_relative = true if relative.nil? && config[:relative_links]
 
           # Try to find a sitemap resource corresponding to the desired path
           this_resource = current_resource # store in a local var to save work
@@ -183,7 +183,7 @@ module Middleman
         # :relative option which, if set to true, will produce
         # relative URLs instead of absolute URLs. You can also add
         #
-        # set :relative_links, true
+        # config[:relative_links] = true
         #
         # to config.rb to have all links default to relative.
         # 
